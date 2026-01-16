@@ -8,13 +8,14 @@ pygame.init()
 screen = pygame.display.set_mode((1280, 720))
 clock = pygame.time.Clock()
 pygame.display.set_caption("Solitaire")
+deck = Deck()
+game_board = GameBoard(1280, 720,deck)
 
-game_board = GameBoard(1280, 720)
 
 FPS = 60
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
-BG_COLOR = "green"
+BG_COLOR = "black"
 
 
 running = True
@@ -24,13 +25,13 @@ def handle_events():
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        game_board.handle_event(event)
 
 def update():
     pass
 
 def draw():
     screen.fill(BG_COLOR)
-    # Draw game elements here
     game_board.draw(screen)
     pygame.display.flip()
 

@@ -1,0 +1,19 @@
+# --- Python Standard ---
+__pycache__/
+*.pyc
+
+# --- Virtual Environments (Crucial!) ---
+# This stops your venv folder from being uploaded
+venv/
+.venv/
+env/
+solitary/
+
+# --- VS Code / Editor Settings ---
+# You usually don't want to share your personal editor settings
+.vscode/
+.idea/
+
+# --- Operating System Junk ---
+Thumbs.db
+.DS_Store
