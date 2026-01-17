@@ -2,6 +2,22 @@ import pygame
 from deck import Deck
 from cards import Card
 from typing import List
+from constants import RANK_VALUE as RANK_VALUES
+
+def is_valid_spider_move(card_to_drop, target_card, strict_suit=False):
+    # 1. Rank Check: Must always be one less (e.g., 5 on 6)
+    card_val = RANK_VALUES[card_to_drop.rank]
+    target_val = RANK_VALUES[target_card.rank]
+    rank_match = (target_val - card_val == 1)
+    
+    if not rank_match:
+        return False
+        
+    # 2. Suit Check: If strict_suit is True, suits must match
+    if strict_suit:
+        return card_to_drop.suit == target_card.suit
+        
+    return True # If not strict, any suit on any suit is fine
 
 
 class GameBoard:
@@ -71,15 +87,40 @@ class GameBoard:
                 col_cards.pop() 
                 break
     def handle_drag_end(self, pos):
-        if self.dragged_card:
-            # TODO: Add logic here to check if drop is valid (e.g., correct rank/suit)
+        if not self.dragged_card:
+            return
+        dropped_successfully = False
+
+        for i, tableau_pos in enumerate(self.tableau_positions):
+            dest_col_cards = self.gameCards[i]
+            empty_slot_rect = pygame.Rect(tableau_pos[0],tableau_pos[1],self.card_width,self.card_height)
+
+            if not dest_col_cards:
+                if empty_slot_rect.collidepoint(pos):
+                    if self.dragged_card.rank == 'K':
+                        dest_col_cards.append(self.dragged_card)
+                        dropped_successfully = True
+                        break
+            else:
+                top_card = dest_col_cards[-1]
+                if top_card.rect.collidepoint(pos):
+                    if is_valid_spider_move(self.dragged_card, top_card):
+                        dest_col_cards.append(self.dragged_card)
+                        dropped_successfully = True
+                        break
             
-            # For now, let's just snap it back to where it came from (testing)
+        
+        if dropped_successfully:
+            source_col = self.gameCards[self.original_col_index]
+            if source_col:
+                source_col[-1].face_up = True
+        else:
+            # Invalid move (or dropped in empty space). Snap back to original column.
             self.gameCards[self.original_col_index].append(self.dragged_card)
+        self.dragged_card = None
+        self.original_col_index = None
             
-            # Reset drag state
-            self.dragged_card = None
-            self.original_col_index = None
+            
 
     def draw(self, screen):
         for pos in self.tableau_positions:
