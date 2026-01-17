@@ -28,7 +28,7 @@ def handle_events():
         game_board.handle_event(event)
 
 def update():
-    pass
+    game_board.update_animations()
 
 def draw():
     screen.fill(BG_COLOR)

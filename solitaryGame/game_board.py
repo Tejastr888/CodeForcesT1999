@@ -47,6 +47,9 @@ class GameBoard:
         self.drag_offset = (0, 0)     
         self.original_col_index = None 
 
+        self.dealing_cards = []
+        self.deal_animation_speed = 15
+
 
         self.stockpile_pos = (self.screen_width - self.card_width - self.padding, self.screen_height-self.card_height-self.padding)
 
@@ -76,7 +79,17 @@ class GameBoard:
     def handle_event(self,event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
-                self.handle_drag_start(event.pos)
+                stockpile_rect = pygame.Rect(
+                    self.stockpile_pos[0],
+                    self.stockpile_pos[1],
+                    self.card_width,
+                    self.card_height
+                )
+                if stockpile_rect.collidepoint(event.pos):
+                    self.deal_from_stockpile()
+                else:
+                    self.handle_drag_start(event.pos)
+        
         elif event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1:
                 self.handle_drag_end(event.pos)
@@ -92,6 +105,70 @@ class GameBoard:
                 for i in range(1, len(self.dragged_cards)):
                     self.dragged_cards[i].rect.x = self.dragged_cards[0].rect.x
                     self.dragged_cards[i].rect.y = self.dragged_cards[0].rect.y + (i * self.padding)
+    
+    def deal_from_stockpile(self):
+        if len(self.stockpile) == 0:
+            print("STOCKPILE IS EMPTY!")
+            return
+        
+        for col in self.gameCards:
+            if len(col) == 0:
+                print("Cannot deal - all columns must have at least one card!")
+                return
+        
+        cards_to_deal = min(10, len(self.stockpile))
+
+        for i in range(cards_to_deal):
+            card:Card = self.stockpile.pop()
+            card.face_up = True
+            target_col = self.gameCards[i]
+            start_x,start_y = self.tableau_positions[i]
+            target_y = start_y + (len(target_col) * self.padding)
+            self.dealing_cards.append({
+                'card': card,
+                'target_col_index': i,
+                'current_x': self.stockpile_pos[0],
+                'current_y': self.stockpile_pos[1],
+                'target_x': start_x,
+                'target_y': target_y
+            })
+
+    def update_animations(self):
+        """Update positions of cards being dealt"""
+        if not self.dealing_cards:
+            return
+        
+        cards_to_remove = []
+        
+        for deal_data in self.dealing_cards:
+            card = deal_data['card']
+            
+            # Calculate direction to target
+            dx = deal_data['target_x'] - deal_data['current_x']
+            dy = deal_data['target_y'] - deal_data['current_y']
+            
+            # Calculate distance
+            distance = (dx**2 + dy**2) ** 0.5
+            
+            if distance < self.deal_animation_speed:
+                # Reached destination
+                self.gameCards[deal_data['target_col_index']].append(card)
+                cards_to_remove.append(deal_data)
+            else:
+                # Move towards target
+                ratio = self.deal_animation_speed / distance
+                deal_data['current_x'] += dx * ratio
+                deal_data['current_y'] += dy * ratio
+                
+                # Update card rect for drawing
+                card.rect.x = int(deal_data['current_x'])
+                card.rect.y = int(deal_data['current_y'])
+        
+        # Remove finished animations
+        for deal_data in cards_to_remove:
+            self.dealing_cards.remove(deal_data)
+
+        
     
     def handle_drag_start(self,pos):
         for col_idx,col_cards in enumerate(self.gameCards):
@@ -172,6 +249,9 @@ class GameBoard:
         
         for i, card in enumerate(self.stockpile):
             card.draw(screen, self.stockpile_pos[0], self.stockpile_pos[1])
+        for deal_data in self.dealing_cards:
+            card = deal_data['card']
+            screen.blit(card.front_face, card.rect)
         
         if self.dragged_cards:
             for card in self.dragged_cards:
