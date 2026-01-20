@@ -191,9 +191,31 @@ class GameBoard:
                         for _ in range(len(seq)):
                             col_cards.pop()
                         return
+    
 
+    def check_and_remove_complete_seq(self,col_idx):
+        col = self.gameCards[col_idx]
 
-
+        if len(col)<13:
+            return False
+        
+        for start_idx in range(len(col)-12):
+            seq = col[start_idx:start_idx + 13]
+            if len(seq) == 13 and seq[0].rank == 'K' and seq[-1].rank == 'A':
+                # first_suit = seq[0].suit
+                # if all(card.suit == first_suit for card in seq):
+                if all(card.face_up for card in seq):
+                    expected_ranks = ['K', 'Q', 'J', '10', '9', '8', '7', '6', '5', '4', '3', '2', 'A']
+                    if all(seq[i].rank == expected_ranks[i] for i in range(13)):
+                        for _ in range(13):
+                            col.pop(start_idx)
+                        if col and not col[-1].face_up:
+                            col[-1].face_up = True
+                        
+                        return True
+                    
+        return False
+                
 
     def handle_drag_end(self, pos):
         if not self.dragged_cards:
@@ -219,6 +241,7 @@ class GameBoard:
                 if top_card.rect.collidepoint(pos):
                     if is_valid_spider_move(first_card, top_card):
                         dest_col_cards.extend(self.dragged_cards)
+                        self.check_and_remove_complete_seq(i)
                         dropped_successfully = True
                         break
     
