@@ -167,8 +167,6 @@ class GameBoard:
         # Remove finished animations
         for deal_data in cards_to_remove:
             self.dealing_cards.remove(deal_data)
-
-        
     
     def handle_drag_start(self,pos):
         for col_idx,col_cards in enumerate(self.gameCards):
@@ -191,7 +189,6 @@ class GameBoard:
                         for _ in range(len(seq)):
                             col_cards.pop()
                         return
-    
 
     def check_and_remove_complete_seq(self,col_idx):
         col = self.gameCards[col_idx]
@@ -216,7 +213,6 @@ class GameBoard:
                     
         return False
                 
-
     def handle_drag_end(self, pos):
         if not self.dragged_cards:
             return
@@ -233,6 +229,7 @@ class GameBoard:
                 if empty_slot_rect.collidepoint(pos):
                     if first_card.rank == 'K':
                         dest_col_cards.extend(self.dragged_cards)
+                        self.check_and_remove_complete_seq(i)
                         dropped_successfully = True
                         break
             else:
@@ -257,8 +254,6 @@ class GameBoard:
         self.dragged_cards = []
         self.original_col_index = None
             
-            
-
     def draw(self, screen):
         for pos in self.tableau_positions:
             pygame.draw.rect(screen, "darkgreen", (pos[0], pos[1], self.card_width, self.card_height), 2)

@@ -1,0 +1,1 @@
+exec('n=int(input());a=[*map(int,input().split())];print("YES"if n==2<a[1]-a[0]else"NO");'*int(input()))
