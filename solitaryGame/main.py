@@ -28,7 +28,12 @@ def handle_events():
         game_board.handle_event(event)
 
 def update():
-    game_board.update_animations()
+    
+
+    if game_board.is_solving:
+        game_board.update_auto_solve()
+    else:
+        game_board.update_animations()
 
 def draw():
     screen.fill(BG_COLOR)
